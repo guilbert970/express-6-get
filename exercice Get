@@ -1,0 +1,55 @@
+const connection = require ('./db-config');
+const express = require('express');
+const app = express ;
+const port = process.env.PORT || 3000;
+
+connection.connect((err) => {
+if(err){
+}else{
+console.error('error.connecting: '+ err.stack');
+console.log('connected as id + connection.threadId);
+}
+});
+
+app.use(express.json());
+
+app.get('/api/movies', (req,res)=> {
+let sql = 'SELECT * FROM MOVIES';
+const sqlValues = [];
+if(req.query.color) {
+sql += 'WHERE color =? ';
+sqlValues.push(req.query.color);
+}
+
+if(req.query.max-duration) {
+if(req.query.color) sql += 'AND duration <= ? ;';
+else sql+= 'WHERE duration <= ?';
+sql.Values.push(req.query.max_duration);
+}
+
+connection.query(sql, sqlValues, (err, results) => {
+if(err) {
+console.log(err);
+res.status(500).send('Error retrieving movie from database');
+}else{
+res.json(results);
+}
+  });
+});
+
+app.get('/api/movies/:id', (req, res) => {
+  const movieId = req.params.id;
+  connection.query(
+    'SELECT * FROM movies WHERE id = ?',
+    [movieId],
+    (err, results) => {
+      if (err) {
+        res.status(500).send('Error retrieving movie from database');
+      } else {
+        if (results.length) res.json(results[0]);
+        else res.status(404).send('Movie not found');
+      }
+    }
+  );
+});
+
